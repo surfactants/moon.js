@@ -3,7 +3,9 @@ var canvas = document.getElementById("Moon");
 var padding = 8;
 var center = canvas.width / 2;
 var diameter = canvas.width - (padding * 2);
-var radius = diameter / 2;
+//var radius = diameter / 2;
+var radiusMoon = diameter / 2;
+var radiusShadow = radiusMoon + 1;
 
 var colorMoon = 'White';
 var colorShadow = 'Black';
@@ -11,18 +13,18 @@ var colorShadow = 'Black';
 var phase = 1.01;
 
 function drawMoon(ctx) {
-  ctx.arc(center, center, radius, 0, 360);
+  ctx.arc(center, center, radiusMoon, 0, 360);
 }
 
 function drawArc(ctx, start, end, offset, rCoef) {
   if (rCoef <= 1.0e-15) {
-    ctx.moveTo(center, padding);
-    ctx.arc(center, center, radius, -Math.PI / 2, Math.PI / 2);
+    //ctx.moveTo(center, padding);
+    ctx.arc(center, center, radiusShadow, -Math.PI / 2, Math.PI / 2);
     ctx.lineTo(center, padding);
     return;
   }
-  var r = radius / rCoef;
-  var c = Math.pow(r, 2.0) - Math.pow(radius, 2.0);
+  var r = radiusShadow / rCoef;
+  var c = Math.pow(r, 2.0) - Math.pow(radiusShadow, 2.0);
   c = Math.sqrt(c);
   var x = center + (offset * c);
   ctx.arc(x, center, r, start, end);
@@ -44,9 +46,9 @@ function drawShadow(ctx) {
     start = -Math.PI / 2;
     end = -start;
     rCoef = (coef - 0.5) * 2;
-    ctx.moveTo(center, padding);
+    //ctx.moveTo(center, padding);
     drawArc(ctx, start, end, -1, rCoef);
-    ctx.arc(center, center, radius, -start, start, true);
+    ctx.arc(center, center, radiusShadow, -start, start, true);
   }
   else if (coef <= 0.5) {
     start = Math.PI / 2;
