@@ -5,12 +5,24 @@ var center = canvas.width / 2;
 var diameter = canvas.width - (padding * 2);
 //var radius = diameter / 2;
 var radiusMoon = diameter / 2;
-var radiusShadow = radiusMoon + 1;
+var radiusShadow = radiusMoon + .4;
 
 var colorMoon = 'White';
 var colorShadow = 'Black';
 
-var phase = 1.01;
+const phase_full = 1.001;
+const phase_half = 0.50;
+const phase_new = -0.001;
+var phase = phase_new;
+var waxing = true;
+
+const interval = 24;
+const timeout_length = 20;
+var timeout = timeout_length;
+
+function pause() {
+  timeout = timeout_length;
+}
 
 function drawMoon(ctx) {
   ctx.arc(center, center, radiusMoon, 0, 360);
@@ -42,23 +54,44 @@ function drawShadow(ctx) {
   
   var offset;
   
-  if (coef > 0.5) {
-    start = -Math.PI / 2;
-    end = -start;
-    rCoef = (coef - 0.5) * 2;
-    //ctx.moveTo(center, padding);
-    drawArc(ctx, start, end, -1, rCoef);
-    ctx.arc(center, center, radiusShadow, -start, start, true);
+  if (!waxing) {
+    if (coef > 0.5) {
+      start = -Math.PI / 2;
+      end = -start;
+      rCoef = (coef - 0.5) * 2;
+      drawArc(ctx, start, end, -1, rCoef);
+      ctx.arc(center, center, radiusShadow, -start, start, true);
+    }
+    else if (coef <= 0.5) {
+      start = Math.PI / 2;
+      end = 360;
+      rCoef = 1 - (coef * 2);
+      drawArc(ctx, start, end, 1, rCoef);
+    }
   }
-  else if (coef <= 0.5) {
-    start = Math.PI / 2;
-    end = 360;
-    rCoef = 1 - (coef * 2);
-    drawArc(ctx, start, end, 1, rCoef);
+  else {
+    if (coef > 0.5) {
+      start = Math.PI / 2;
+      end = -start;
+      rCoef = (coef - 0.5) * 2;
+      drawArc(ctx, start, end, 1, rCoef);
+      ctx.arc(center, center, radiusShadow, -start, start, true);
+    }
+    else if (coef <= 0.5) {
+      start = Math.PI / 2;
+      end = 360;
+      rCoef = 1 - (coef * 2);
+      drawArc(ctx, start, end, -1, rCoef);
+    }
   }
 }
 
 function draw() {
+  if (timeout > 0) {
+    timeout--;
+    return;
+  }
+  console.log(phase);
   var ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   
@@ -78,23 +111,25 @@ function draw() {
   ctx.fillStyle = colorShadow;
   ctx.fill();
   ctx.closePath();
+
+  var phaseOffset = (-0.4 * Math.pow(phase - 0.5, 2) + 0.11) / 10;
   
-  var phaseOffset;
-  if (phase <= 1.0 && phase >= 0.0) {
-    //-.039 * (x - 0.5)^2 + 0.01
-    var phaseOffset = -0.039 * Math.pow(phase - 0.5, 2) + 0.01;
+  if (waxing) {
+    phase += phaseOffset;
+    if (phase > phase_full) {
+      console.log("now waning!")
+      waxing = false;
+      pause();
+    }
   }
-  else { 
-    phaseOffset = 0.01;
-  }
-  phase -= phaseOffset;
-  if (phase < -0.25) {
-    phase = 1.25;
-    var color = colorMoon;
-    colorMoon = colorShadow;
-    colorShadow = color;
-    //colorMoon = [colorShadow, colorShadow = colorMoon][0];
+  else { // waning
+    phase -= phaseOffset;
+    if (phase < phase_new) {
+      console.log("now waxing!")
+      waxing = true;
+      pause();
+    }
   }
 }
 
-setInterval(draw, 40);
+setInterval(draw, interval);
